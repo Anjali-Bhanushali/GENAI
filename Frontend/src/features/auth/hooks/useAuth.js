@@ -8,16 +8,16 @@ export const useAuth = () => {
   const { user, setUser, loading, setLoading } = context;
 
   const handleLogin = async ({ email, password }) => {
-        setLoading(true)
-        try {
-            const data = await login({ email, password })
-            setUser(data.user) 
-        } catch (err) {
-            console.log(err);
-        } finally {
-            setLoading(false)
-        }
-    };
+    setLoading(true);
+    try {
+      const data = await login({ email, password });
+      setUser(data.user);
+    } catch (err) {
+      console.log(err);
+    } finally {
+      setLoading(false);
+    }
+  };
   const handleRegister = async ({ username, email, password }) => {
     setLoading(true);
     try {
@@ -37,20 +37,18 @@ export const useAuth = () => {
   };
 
   useEffect(() => {
+    const getAndSetUser = async () => {
+      try {
+        const data = await getMe();
+        setUser(data.user);
+      } catch (err) {
+      } finally {
+        setLoading(false);
+      }
+    };
 
-        const getAndSetUser = async () => {
-            try {
-                const data = await getMe()
-                setUser(data.user)
-            } catch (err) { } finally {
-                setLoading(false)
-            }
-        }
-
-        getAndSetUser()
-
-    }, [])
-  
+    getAndSetUser();
+  }, []);
 
   return { user, loading, handleLogin, handleRegister, handleLogout };
 };
