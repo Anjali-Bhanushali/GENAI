@@ -56,8 +56,7 @@ $severity-low: #3fb950;
     padding: 1.75rem 1rem;
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
-    gap: 0.25rem;
+    justify-content: flex-start;
 
 
 
@@ -107,6 +106,123 @@ $severity-low: #3fb950;
         display: flex;
         align-items: center;
         flex-shrink: 0;
+    }
+}
+
+.nav-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+    margin-top: auto;
+
+    .button {
+        width: 100%;
+        min-height: 42px;
+        border-radius: 0.5rem;
+        font-weight: 600;
+    }
+}
+
+.sidebar-recent-plans {
+    margin-top: 1.75rem;
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    min-height: 0;
+
+    &__list {
+        display: flex;
+        flex-direction: column;
+        gap: 0.4rem;
+        height: 300px;
+        min-height: 0;
+        padding-right: 0.25rem;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        scrollbar-color: rgba($accent, 0.7) $bg-panel;
+        scrollbar-width: thin;
+
+        &::-webkit-scrollbar {
+            display: block;
+            width: 5px;
+        }
+
+        &::-webkit-scrollbar-track {
+            background: $bg-panel;
+            border-radius: 999px;
+        }
+
+        &::-webkit-scrollbar-thumb {
+            background: rgba($accent, 0.7);
+            border-radius: 999px;
+        }
+    }
+
+    &__item {
+        display: flex;
+        flex-direction: column;
+        gap: 0.2rem;
+        width: 100%;
+        flex: 0 0 auto;
+        padding: 0.55rem 0.7rem;
+        overflow: hidden;
+        border: 1px solid transparent;
+        border-radius: 0.45rem;
+        background: transparent;
+        color: $text-primary;
+        font-family: $font-stack;
+        text-align: left;
+        cursor: pointer;
+        transition: background-color 0.15s, border-color 0.15s;
+
+        .sidebar-recent-plans__title {
+            display: block;
+            font-size: 0.78rem;
+            font-weight: 600;
+            line-height: 1.35;
+            overflow-wrap: anywhere;
+            white-space: normal;
+        }
+
+        small {
+            color: $text-muted;
+            font-size: 0.68rem;
+        }
+
+        &:hover {
+            background: $bg-panel;
+            border-color: $border-color;
+        }
+
+        &--active {
+            border-color: rgba($accent, 0.5);
+            background: rgba($accent, 0.1);
+
+            small {
+                color: $accent;
+            }
+        }
+    }
+}
+
+.logout-button {
+    background-color: transparent;
+    border: 1px solid $border-color;
+    color: $text-primary;
+
+    &:hover {
+        border-color: $accent;
+        color: $accent;
+    }
+}
+
+.new-report-button {
+    background-color: rgba($accent, 0.1);
+    border: 1px solid rgba($accent, 0.55);
+    color: $accent;
+
+    &:hover {
+        background-color: rgba($accent, 0.2);
     }
 }
 

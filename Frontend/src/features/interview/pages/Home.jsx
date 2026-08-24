@@ -1,18 +1,61 @@
-import React, { useState, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import "../style/home.scss";
 import { useInterview } from "../hooks/useInterview.js";
 import { useNavigate } from "react-router";
+import { useAuth } from "../../auth/hooks/useAuth.js";
+
+const GENERATION_STEPS = [
+  "Analyzing your target role and key requirements…",
+  "Matching your experience to the role…",
+  "Preparing tailored interview questions…",
+  "Building your personalized preparation roadmap…",
+];
+
+const ReportGenerationLoader = () => {
+  const [stepIndex, setStepIndex] = useState(0);
+
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      setStepIndex((currentStep) => (currentStep + 1) % GENERATION_STEPS.length);
+    }, 2200);
+
+    return () => window.clearInterval(timer);
+  }, []);
+
+  return (
+    <main className="loading-screen report-generation-loader">
+      <section className="generation-card" aria-live="polite">
+        <div className="generation-orb" aria-hidden="true">
+          <span className="generation-orb__core">AI</span>
+          <span className="generation-orb__ring" />
+          <span className="generation-orb__spark generation-orb__spark--one" />
+          <span className="generation-orb__spark generation-orb__spark--two" />
+        </div>
+        <p className="generation-eyebrow">AI REPORT GENERATION</p>
+        <h1>Creating your interview strategy</h1>
+        <p className="generation-status" key={GENERATION_STEPS[stepIndex]}>
+          {GENERATION_STEPS[stepIndex]}
+        </p>
+        <div className="generation-progress" aria-hidden="true">
+          <span />
+        </div>
+        <p className="generation-note">This usually takes around 30 seconds</p>
+      </section>
+    </main>
+  );
+};
 
 const Home = () => {
-  const { loading, generateReport, reports } = useInterview();
+  const { loading, generateReport, reports, downloadReportPdf } = useInterview();
+  const { handleLogout } = useAuth();
   const [jobDescription, setJobDescription] = useState("");
   const [selfDescription, setSelfDescription] = useState("");
+  const [resumeFile, setResumeFile] = useState(null);
   const resumeInputRef = useRef();
 
   const navigate = useNavigate();
 
   const handleGenerateReport = async () => {
-    const resumeFile = resumeInputRef.current.files[0];
     const data = await generateReport({
       jobDescription,
       selfDescription,
@@ -21,18 +64,33 @@ const Home = () => {
     navigate(`/interview/${data._id}`);
   };
 
+  const onLogout = async () => {
+    await handleLogout();
+    navigate("/login", { replace: true });
+  };
+
+  const handleResumeChange = (event) => {
+    setResumeFile(event.target.files[0] || null);
+  };
+
+  const removeResume = () => {
+    setResumeFile(null);
+    resumeInputRef.current.value = "";
+  };
+
+  const formatFileSize = (size) => `${(size / 1024 / 1024).toFixed(1)} MB`;
+
   if (loading) {
-    return (
-      <main className="loading-screen">
-        <h1>Loading your interview plan...</h1>
-      </main>
-    );
+    return <ReportGenerationLoader />;
   }
 
   return (
     <div className="home-page">
       {/* Page Header */}
       <header className="page-header">
+        <button className="logout-btn" onClick={onLogout} type="button">
+          Log out
+        </button>
         <h1>
           Create Your Custom <span className="highlight">Interview Plan</span>
         </h1>
@@ -42,6 +100,7 @@ const Home = () => {
         </p>
       </header>
 
+      <div className="home-workspace">
       {/* Main Card */}
       <div className="interview-card">
         <div className="interview-card__body">
@@ -109,30 +168,45 @@ const Home = () => {
                 Upload Resume
                 <span className="badge badge--best">Best Results</span>
               </label>
-              <label className="dropzone" htmlFor="resume">
+              <label
+                className={`dropzone ${resumeFile ? "dropzone--uploaded" : ""}`}
+                htmlFor="resume"
+              >
                 <span className="dropzone__icon">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="28"
-                    height="28"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <polyline points="16 16 12 12 8 16" />
-                    <line x1="12" y1="12" x2="12" y2="21" />
-                    <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3" />
-                  </svg>
+                  {resumeFile ? (
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                      <circle cx="12" cy="12" r="9" />
+                      <path d="m8 12 2.5 2.5L16 9" />
+                    </svg>
+                  ) : (
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="28"
+                      height="28"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <polyline points="16 16 12 12 8 16" />
+                      <line x1="12" y1="12" x2="12" y2="21" />
+                      <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3" />
+                    </svg>
+                  )}
                 </span>
                 <p className="dropzone__title">
-                  Click to upload or drag &amp; drop
+                  {resumeFile ? resumeFile.name : "Click to upload or drag & drop"}
                 </p>
-                <p className="dropzone__subtitle">PDF or DOCX (Max 5MB)</p>
+                <p className="dropzone__subtitle">
+                  {resumeFile
+                    ? "Resume uploaded successfully — click to replace"
+                    : "PDF or DOCX (Max 5MB)"}
+                </p>
                 <input
                   ref={resumeInputRef}
+                  onChange={handleResumeChange}
                   hidden
                   type="file"
                   id="resume"
@@ -140,6 +214,14 @@ const Home = () => {
                   accept=".pdf,.docx"
                 />
               </label>
+              {resumeFile && (
+                <div className="uploaded-file" aria-live="polite">
+                  <span>{formatFileSize(resumeFile.size)}</span>
+                  <button type="button" onClick={removeResume}>
+                    Remove
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* OR Divider */}
@@ -241,11 +323,35 @@ const Home = () => {
                 >
                   Match Score: {report.matchScore}%
                 </p>
+                <button
+                  className="report-download-btn"
+                  type="button"
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    downloadReportPdf(report._id);
+                  }}
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M12 3v12" />
+                    <path d="m7 10 5 5 5-5" />
+                    <path d="M5 21h14" />
+                  </svg>
+                  Download Report
+                </button>
               </li>
             ))}
           </ul>
         </section>
       )}
+      </div>
 
       {/* Page Footer */}
       <footer className="page-footer">
