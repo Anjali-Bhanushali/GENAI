@@ -19,6 +19,11 @@ const authRouter = require("./routes/auth.routes");
 const interviewRouter = require("./routes/interview.routes");
 
 /* using all the routes here */
+app.get("/health", (req, res) => {
+  res.status(200).json({
+    message: "Server is up and running.",
+  });
+});
 app.use("/api/auth", authRouter);
 app.use("/api/interview", interviewRouter);
 

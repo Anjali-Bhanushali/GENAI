@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import "../auth.form.scss";
 import { useNavigate, Link } from "react-router";
+import "../auth.form.scss";
 import { useAuth } from "../hooks/useAuth";
 
 const Login = () => {
@@ -19,14 +19,14 @@ const Login = () => {
   if (loading) {
     return (
       <main>
-        <h1>Loading........</h1>
+        <h1>Loading.......</h1>
       </main>
     );
   }
 
   return (
     <main>
-      <div>
+      <div className="form-container">
         <h1>Login</h1>
         <form onSubmit={handleSubmit}>
           <div className="input-group">
@@ -38,10 +38,9 @@ const Login = () => {
               type="email"
               id="email"
               name="email"
-              placeholder="Enter your email"
+              placeholder="Enter email address"
             />
           </div>
-
           <div className="input-group">
             <label htmlFor="password">Password</label>
             <input
@@ -51,17 +50,13 @@ const Login = () => {
               type="password"
               id="password"
               name="password"
-              placeholder="Enter your password"
+              placeholder="Enter password"
             />
           </div>
-
-          <button className="button primary-button" type="submit">
-            Login
-          </button>
+          <button className="button primary-button">Login</button>
         </form>
-
         <p>
-          Don't have an account? <Link to="/register">Register</Link>{" "}
+          Don't have an account? <Link to={"/register"}>Register</Link>{" "}
         </p>
       </div>
     </main>
