@@ -58,17 +58,18 @@ export const useInterview = () => {
 
   const getReports = async () => {
     setLoading(true);
-    let response = null;
+
     try {
-      response = await getAllInterviewReports();
-      setReports(response.interviewReports);
+      const response = await getAllInterviewReports();
+      const interviewReports = response?.interviewReports ?? [];
+      setReports(interviewReports);
+      return interviewReports;
     } catch (error) {
-      console.log(error);
+      setReports([]);
+      return [];
     } finally {
       setLoading(false);
     }
-
-    return response.interviewReports;
   };
 
   const downloadReportPdf = async (interviewReportId) => {
@@ -81,7 +82,10 @@ export const useInterview = () => {
       );
       const link = document.createElement("a");
       link.href = url;
-      link.setAttribute("download", `interview_report_${interviewReportId}.pdf`);
+      link.setAttribute(
+        "download",
+        `interview_report_${interviewReportId}.pdf`,
+      );
       document.body.appendChild(link);
       link.click();
       link.remove();
