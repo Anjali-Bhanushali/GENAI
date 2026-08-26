@@ -23,35 +23,40 @@ function getPositionTitle(jobDescription) {
  */
 async function generateInterViewReportController(req, res) {
   try {
-    if (!req.file) {
+    const { selfDescription = "", jobDescription = "" } = req.body;
+
+    if (!jobDescription.trim()) {
       return res.status(400).json({
-        message: "Resume file is required.",
+        message: "Job description is required.",
       });
     }
 
-    const resumeContent = await new pdfParse.PDFParse(
-      Uint8Array.from(req.file.buffer),
-    ).getText();
+    if (!req.file && !selfDescription.trim()) {
+      return res.status(400).json({
+        message: "Please upload a resume or provide a self-description.",
+      });
+    }
 
-    const { selfDescription, jobDescription } = req.body;
+    let resumeText = "";
+
+    if (req.file) {
+      const resumeContent = await new pdfParse.PDFParse(
+        Uint8Array.from(req.file.buffer),
+      ).getText();
+
+      resumeText = resumeContent.text;
+    }
 
     const interViewReportByAi = await generateInterviewReport({
-      resume: resumeContent.text,
+      resume: resumeText,
       selfDescription,
       jobDescription,
     });
 
-    //     console.log("AI RESPONSE:", JSON.stringify(interViewReportByAi, null, 2));
-
-    // console.log("technicalQuestions:", interViewReportByAi.technicalQuestions);
-    // console.log("behavioralQuestions:", interViewReportByAi.behavioralQuestions);
-    // console.log("skillGaps:", interViewReportByAi.skillGaps);
-    // console.log("preparationPlan:", interViewReportByAi.preparationPlan);
-
     const interviewReport = await interviewReportModel.create({
       user: req.user.id,
       title: getPositionTitle(jobDescription),
-      resume: resumeContent.text,
+      resume: resumeText,
       selfDescription,
       jobDescription,
       ...interViewReportByAi,
@@ -159,18 +164,40 @@ async function downloadInterviewReportPdfController(req, res) {
     pdf.moveDown(0.4);
   };
 
-  pdf.font("Helvetica-Bold").fontSize(24).fillColor("#161b22").text("Interview Preparation Report");
+  pdf
+    .font("Helvetica-Bold")
+    .fontSize(24)
+    .fillColor("#161b22")
+    .text("Interview Preparation Report");
   pdf.moveDown(0.5);
-  pdf.font("Helvetica").fontSize(11).fillColor("#4b5563").text(`Generated: ${new Date(interviewReport.createdAt).toLocaleDateString()}`);
+  pdf
+    .font("Helvetica")
+    .fontSize(11)
+    .fillColor("#4b5563")
+    .text(
+      `Generated: ${new Date(interviewReport.createdAt).toLocaleDateString()}`,
+    );
 
   addSectionTitle("Match Score");
-  pdf.font("Helvetica-Bold").fontSize(20).fillColor("#161b22").text(`${interviewReport.matchScore}%`);
+  pdf
+    .font("Helvetica-Bold")
+    .fontSize(20)
+    .fillColor("#161b22")
+    .text(`${interviewReport.matchScore}%`);
 
   const addQuestions = (title, questions) => {
     addSectionTitle(title);
     questions.forEach((item, index) => {
-      pdf.font("Helvetica-Bold").fontSize(12).fillColor("#161b22").text(`${index + 1}. ${item.question}`);
-      pdf.font("Helvetica-Bold").fontSize(10).fillColor("#374151").text("Intention:", { continued: true });
+      pdf
+        .font("Helvetica-Bold")
+        .fontSize(12)
+        .fillColor("#161b22")
+        .text(`${index + 1}. ${item.question}`);
+      pdf
+        .font("Helvetica-Bold")
+        .fontSize(10)
+        .fillColor("#374151")
+        .text("Intention:", { continued: true });
       pdf.font("Helvetica").text(` ${item.intention}`);
       pdf.font("Helvetica-Bold").text("Model Answer:", { continued: true });
       pdf.font("Helvetica").text(` ${item.answer}`);
@@ -182,13 +209,23 @@ async function downloadInterviewReportPdfController(req, res) {
   addQuestions("Behavioral Questions", interviewReport.behavioralQuestions);
 
   addSectionTitle("Skill Gaps");
-  pdf.font("Helvetica").fontSize(11).fillColor("#161b22").text(
-    interviewReport.skillGaps.map((gap) => `${gap.skill} (${gap.severity})`).join(", "),
-  );
+  pdf
+    .font("Helvetica")
+    .fontSize(11)
+    .fillColor("#161b22")
+    .text(
+      interviewReport.skillGaps
+        .map((gap) => `${gap.skill} (${gap.severity})`)
+        .join(", "),
+    );
 
   addSectionTitle("Preparation Road Map");
   interviewReport.preparationPlan.forEach((day) => {
-    pdf.font("Helvetica-Bold").fontSize(12).fillColor("#161b22").text(`Day ${day.day}: ${day.focus}`);
+    pdf
+      .font("Helvetica-Bold")
+      .fontSize(12)
+      .fillColor("#161b22")
+      .text(`Day ${day.day}: ${day.focus}`);
     pdf.font("Helvetica").fontSize(10).list(day.tasks, { bulletRadius: 2 });
     pdf.moveDown(0.5);
   });
